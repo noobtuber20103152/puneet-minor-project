@@ -1,113 +1,230 @@
+'use client'
 import Image from 'next/image'
-
+import Sidebar from '../components/sidebar'
+import Header from '../components/header'
+import { AiFillEye } from "react-icons/ai"
+import { BiMoneyWithdraw } from "react-icons/bi"
+import { BsLightningCharge } from "react-icons/bs"
+import { IoFastFoodOutline, IoFastFoodSharp } from 'react-icons/io'
+import { FaHamburger } from "react-icons/fa"
+import { MdOutlineNoFood } from "react-icons/md"
+import { auth, db, provider } from '../../firebase/config'
+import { useAuthState } from "react-firebase-hooks/auth"
+import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth'
+import { use, useEffect, useState } from 'react'
+import { collection, getDocs, orderBy, query } from 'firebase/firestore'
 export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+  const user = useAuthState(auth)?.[0];
+  const [getPassData, setGetPassData] = useState([]);
+  const [getLeaveData, setGetLeaveData] = useState([]);
+  // useEffect(() => {
+  // async function getGatePass() {
+  let q = query(collection(db, `pass/gatepass/${user?.email}`), orderBy('date'));
+  getDocs(q).then((doc) => {
+    let arr = [];
+    doc.forEach((e) => {
+      arr.push({ id: e.id, ...e.data() })
+    })
+    arr.reverse();
+    setGetPassData(arr);
+  })
+  // }
+  // async function getLeavePass() {
+  q = query(collection(db, `pass/leavePass/${user?.email}`), orderBy('date'));
+  getDocs(q).then((doc) => {
+    let arr = [];
+    doc.forEach((e) => {
+      arr.push({ id: e.id, ...e.data() })
+    })
+    arr.reverse();
+    // setGetPassData(arr);
+    setGetLeaveData(arr);
+  })
+  // }
+  // getLeavePass();
+  // getGatePass();
+  // }, [])
+  const login = () => {
+    console.log("login")
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        console.log(credential);
+
+
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+      });
+  }
+  const logout = () => {
+    signOut(auth)
+  }
+  if (user) {
+    return <>
+      <div className='flex h-screen overflow-hidden'>
+        <Sidebar />
+        <div class="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+          <Header />
+          <div className=' py-4 mx-auto w-10/12 grid md:grid-cols-4 grid-cols-2'>
+            <div className='w-11/12  px-4 py-4 bg-white shadow-xl'>
+              <BiMoneyWithdraw className='text-4xl text-blue-400' />
+              <h1 className='mt-6 text-3xl font-bold'>
+                Rs. 11,400
+              </h1>
+              <p className='text-xl text-gray-600'>Remaining Mess Account</p>
+
+            </div>
+            <div className='w-11/12  px-4 py-4 bg-white shadow-xl'>
+              <MdOutlineNoFood className='text-4xl text-blue-400' />
+              <h1 className='mt-6 text-3xl font-bold'>
+                Rs. 5,500
+              </h1>
+              <p className='text-xl text-gray-600'>Diet Charges</p>
+
+            </div>
+            <div className='w-11/12  px-4 py-4 bg-white shadow-xl'>
+              <BsLightningCharge className='text-4xl text-blue-400' />
+              <h1 className='mt-6 text-3xl font-bold'>
+                Rs. 470
+              </h1>
+              <p className='text-xl text-gray-600'>Fine Charges</p>
+
+            </div>
+            <div className='w-11/12  px-4 py-4 bg-white shadow-xl'>
+              <FaHamburger className='text-4xl text-blue-400' />
+              <h1 className='mt-6 text-3xl font-bold'>
+                Rs. 1200
+              </h1>
+              <p className='text-xl text-gray-600'>Extra Mess Items</p>
+
+            </div>
+
+
+          </div>
+
+
+
+
+
+
+
+          <div>
+
+            <div class="relative mx-auto w-10/12 my-20 overflow-x-auto">
+              <h1 className='text-2xl font-bold my-5'>
+                Leave Pass History
+              </h1>
+              <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                  <tr>
+                    <th scope="col" class="px-6 py-3">
+                      Date
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                      Destination
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                      Out Time
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                      In Date
+                    </th>
+                  </tr>
+                </thead>
+                {getLeaveData?.map((e) => {
+                  let date = new Date(e.date.seconds * 1000);
+                  console.log(date.toISOString().slice(0, 10));
+                  return <>
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                      <td class="px-6 py-4">
+                        {date.toISOString().slice(0, 10)}
+                      </td>
+                      <td class="px-6 py-4">
+                        {e.destination}
+                      </td>
+                      <td class="px-6 py-4">
+                        {e.outTime}
+                      </td>
+                      <td class="px-6 py-4">
+                        {e.inDate}
+                      </td>
+                    </tr>
+                  </>
+                })}
+              </table>
+            </div>
+            <div class="relative mx-auto w-10/12 my-20 overflow-x-auto">
+              <h1 className='text-2xl font-bold my-5'>
+                Outpass History
+              </h1>
+              <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                  <tr>
+                    <th scope="col" class="px-6 py-3">
+                      Date
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                      Destination
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                      Out Time
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                      Return Date
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getPassData?.map((e) => {
+                    let date = new Date(e.date.seconds * 1000);
+                    // console.log(date.toISOString().slice(0, 10));
+                    return <>
+                      <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                        <td class="px-6 py-4">
+                          {date.toISOString().slice(0, 10)}
+                        </td>
+                        <td class="px-6 py-4">
+                          {e.destination}
+                        </td>
+                        <td class="px-6 py-4">
+                          {e.outTime}
+                        </td>
+                        <td class="px-6 py-4">
+                          {e.inTime}
+                        </td>
+                      </tr>
+                    </>
+                  })}
+
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
+        {/* <h1 className='text-xl font-bold'>Hello</h1> */}
       </div>
+    </>
+  }
+  else {
+    return <>
+      <section class="text-gray-600 body-font h-screen  flex justify-center items-center ">
+        <div class="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center my-auto">
+          <div class="lg:flex-grow md:w-1/2 lg:pr-24 md:pr-16 flex flex-col md:items-start md:text-left mb-16 md:mb-0 items-center text-center">
+            <h1 class="title-font sm:text-4xl text-3xl mb-4 font-bold text-gray-900">Hostel Ease
+            </h1>
+            <p class="mb-8 leading-relaxed">A comprehensive software solution that automates and streamlines the management of hostel operations, including gate pass, leave pass, attendance management, mess and hostel related queries, and overall administration.</p>
+            <div class="flex justify-center">
+              <button onClick={login} class="inline-flex text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg">Login</button>
+              {/* <button class="ml-4 inline-flex text-gray-700 bg-gray-100 border-0 py-2 px-6 focus:outline-none hover:bg-gray-200 rounded text-lg">Button</button> */}
+            </div>
+          </div>
+          <div class="lg:max-w-lg lg:w-full md:w-1/2 w-5/6">
+            <img class="object-cover object-center rounded" alt="hero" src="https://img.freepik.com/free-vector/college-university-students-group-young-happy-people-standing-isolated-white-background_575670-66.jpg" />
+          </div>
+        </div>
+      </section>
+    </>
+  }
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://beta.nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore the Next.js 13 playground.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
 }
